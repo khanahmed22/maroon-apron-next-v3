@@ -21,9 +21,10 @@ const SOFT = "#FBF7F6"
 interface CartProps {
   cartOpen: boolean
   setCartOpen: Dispatch<SetStateAction<boolean>>
+  activeThemeName:string
 }
 
-export default function Cart({ cartOpen, setCartOpen }: CartProps) {
+export default function Cart({ cartOpen, setCartOpen ,activeThemeName}: CartProps) {
   const { cart, clearCart, deleteCart } = useCart()
   const router = useRouter()
 
@@ -31,10 +32,10 @@ export default function Cart({ cartOpen, setCartOpen }: CartProps) {
 
   return (
     <Dialog open={cartOpen} onOpenChange={setCartOpen}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" data-theme={activeThemeName}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5" style={{ color: ACCENT }} />
+            <ShoppingBag className="w-5 h-5 text-primary"  />
             Your Cart
           </DialogTitle>
           <DialogDescription />
@@ -85,17 +86,19 @@ export default function Cart({ cartOpen, setCartOpen }: CartProps) {
               <span>Rs. {subtotal}</span>
             </div>
 
-            <div className="flex gap-3 mt-2">
+            <div className="flex gap-3 mt-2 items-center justify-center gap-x-5">
               <Button
-                variant="outline"
-                className="flex-1 rounded-full"
+                
+                className=" rounded-full w-fit bg-red-600"
                 onClick={() => clearCart()}
               >
                 Clear Cart
               </Button>
               <Button
-                className="flex-1 rounded-full text-white"
-                style={{ backgroundColor: ACCENT }}
+                className="mt-auto pt-3 w-fit text-sm font-semibold rounded-full py-2 px-4 transition-colors
+                                 bg-primary text-primary-foreground
+                                 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:opacity-100"
+               
                 onClick={() => {
                   router.push("/checkout")
                   setCartOpen(false)
@@ -110,7 +113,7 @@ export default function Cart({ cartOpen, setCartOpen }: CartProps) {
             className="flex flex-col items-center justify-center gap-2 py-12 text-center"
             style={{ color: MUTE }}
           >
-            <ShoppingBag className="w-10 h-10" style={{ color: BORDER }} />
+            <ShoppingBag className="w-10 h-10 text-primary"  />
             <p className="font-medium">Your cart is empty</p>
             <p className="text-sm">Add something tasty to get started.</p>
           </div>

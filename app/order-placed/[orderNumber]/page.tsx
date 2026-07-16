@@ -32,7 +32,9 @@ interface OrderProps {
   recieveMethod: string
   status: string
   createdAt: string
-  orderTotal: number
+  orderTotal: number,
+  deliveryArea:string,
+  deliveryFee: string
 }
 
 export default function OrderPlaced() {
@@ -234,7 +236,7 @@ const statusStyles = getStatusStyles(orderQuery?.status)
             className="font-bold text-base mb-4"
             style={{ color: INK }}
           >
-            Delivery Details
+            Order Details
           </h2>
 
           <div className="space-y-3 text-sm">
@@ -276,6 +278,18 @@ const statusStyles = getStatusStyles(orderQuery?.status)
                 />
                 <span style={{ color: INK }}>
                   {orderQuery.custAddress}
+                </span>
+              </div>
+            )}
+
+            {orderQuery.deliveryArea && (
+              <div className="flex items-center gap-3">
+                <MapPin
+                  className="w-4 h-4 shrink-0"
+                  style={{ color: ACCENT }}
+                />
+                <span style={{ color: INK }}>
+                  {orderQuery.deliveryArea}
                 </span>
               </div>
             )}
@@ -347,6 +361,19 @@ const statusStyles = getStatusStyles(orderQuery?.status)
               </div>
             ))}
           </div>
+
+          {orderQuery?.deliveryFee && <div
+            className="flex items-center justify-between mt-5 pt-4 border-t text-base font-bold"
+            style={{
+              borderColor: BORDER,
+              color: INK,
+            }}
+          >
+            <span>Delivery Fee: </span>
+            <span>Rs. {orderQuery?.deliveryFee}</span>
+          </div>}
+
+           
 
           <div
             className="flex items-center justify-between mt-5 pt-4 border-t text-base font-bold"
