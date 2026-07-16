@@ -66,8 +66,7 @@ export default function Checkout(){
     orderTotal: 0,
   });
 
-  // cart can be empty when this page loads (refresh, deep link, etc.) —
-  // guard with optional chaining so we don't crash on cart[0]
+  
   
   const restId = cart[0]?.restId
 
@@ -99,8 +98,6 @@ export default function Checkout(){
   const minimumOrder = Number(selectedArea?.minOrder ?? 0);
   const finalTotal = subtotal + deliveryFee;
 
-  // Per the spec: minimum order is checked against the subtotal only,
-  // never against the total after delivery fee is added.
   const belowMinimumOrder =
     custDetails.recieveMethod === "delivery" &&
     !!selectedArea &&
@@ -148,9 +145,7 @@ export default function Checkout(){
             custDetails.recieveMethod === "delivery"
               ? selectedArea?.areaName ?? ""
               : "",
-          // deliveryFee is already folded into orderTotal above — this is
-          // just so the fee itself is also recorded on the order, stored
-          // as a string like every other price/amount field in the DB.
+         
           deliveryFee:
             custDetails.recieveMethod === "delivery"
               ? String(deliveryFee)
@@ -363,7 +358,6 @@ export default function Checkout(){
                         setCustDetails({
                           ...custDetails,
                           recieveMethod: e.target.value,
-                          // switching to pickup drops the delivery-only fields
                           deliveryArea: "",
                           custAddress: "",
                         })

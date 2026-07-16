@@ -74,8 +74,7 @@ interface RestResponse {
   getRest: RestListProps
 }
 
-// Per-item quantity + selected variant, keyed by product id — a single
-// shared value here would make every product pick the same variant.
+
 interface Selection {
   variantId?: string
   quantity: number
@@ -90,7 +89,6 @@ export default function Home() {
   const [categoryTab, setCategoryTab] = useState("all")
   const [search, setSearch] = useState("")
   const [selections, setSelections] = useState<Record<string, Selection>>({})
-  // The product currently open in the "add to cart" detail modal
   const [activeItem, setActiveItem] = useState<InventProps | null>(null)
 
   const fetchMenu = async () => {
@@ -176,7 +174,6 @@ export default function Home() {
 
   const selection = getSelection(activeItem.id);
 
-  // Require variant selection only if variants exist
   if (
     activeItem.variants?.length > 0 &&
     !selection.variantId
