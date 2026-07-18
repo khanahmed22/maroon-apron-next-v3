@@ -6,7 +6,7 @@ import { toast } from "sonner"
 import { useCart } from "@/zustand/cartStore"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { User, Mail, Phone, MapPin, Store, Truck, ShoppingBag } from "lucide-react"
+import { User, Mail, Phone, MapPin, Store, Truck, ShoppingBag, Tag, X, Loader2 } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import {
   Select,
@@ -39,6 +39,12 @@ interface AreaProps {
   minOrder: string;
 }
 
+interface AppliedCoupon {
+  code: string;
+  couponId: string;
+  discount: number;
+}
+
 export default function Checkout(){
   const {cart,clearCart} = useCart()
   const router = useRouter()
@@ -51,6 +57,7 @@ export default function Checkout(){
   const MUTE = "#6B7280"
   const BORDER = "#E7E5E4"
   const SOFT = "#FBF7F6"
+  const SUCCESS = "#16A34A"
 
   const [custDetails, setCustDetails] = useState<CustomerProps>({
     orderNumber: String(generateOrderNumber()),
@@ -90,13 +97,67 @@ export default function Checkout(){
 
   });
 
+   // ================= COUPON =================
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
+
+  const handleApplyCoupon = async () => {
+    const trimmedCode = couponCode.trim().toUpperCase();
+    if (!trimmedCode) return;
+
+    if (!custDetails.custEmail) {
+      toast.error("Enter your email above before applying a coupon");
+      return;
+    }
+    if (!restId || subtotal <= 0) return;
+
+    setApplyingCoupon(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/coupons/validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: trimmedCode,
+          cartTotal: subtotal,
+          userId: custDetails.custEmail,
+          restId,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || "Invalid coupon");
+        return;
+      }
+
+      setAppliedCoupon({
+        code: trimmedCode,
+        couponId: data.couponId,
+        discount: data.discount,
+      });
+      toast.success(`"${trimmedCode}" applied`);
+    } catch {
+      toast.error("Failed to apply coupon");
+    } finally {
+      setApplyingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+  };
+
   const selectedArea = deliveryList?.find(
     (area) => area.areaId === custDetails.deliveryArea
   );
 
   const deliveryFee = Number(selectedArea?.deliveryFee ?? 0);
   const minimumOrder = Number(selectedArea?.minOrder ?? 0);
-  const finalTotal = subtotal + deliveryFee;
+  const discountAmount = appliedCoupon?.discount ?? 0;
+  const finalTotal = Math.max(0, subtotal + deliveryFee - discountAmount);
 
   const belowMinimumOrder =
     custDetails.recieveMethod === "delivery" &&
@@ -152,9 +213,21 @@ export default function Checkout(){
               : "",
         },
         cart,
+        // Nothing has been recorded for this coupon yet — the order
+        // controller should redeem it (CouponUsage row + usedCount++)
+        // in the same transaction as creating the order.
+        coupon: appliedCoupon
+          ? {
+              couponId: appliedCoupon.couponId,
+              code: appliedCoupon.code,
+              discount: appliedCoupon.discount,
+            }
+          : null,
       }),
     });
     clearCart();
+    setAppliedCoupon(null);
+    setCouponCode("");
     router.push(`/order-placed/${custDetails.orderNumber}`)
     return res.json();
   };
@@ -224,6 +297,53 @@ export default function Checkout(){
               </div>
             )}
 
+            {/* ================= COUPON CODE ================= */}
+            {cart?.length > 0 && (
+              <div className="mt-5 pt-4 border-t" style={{ borderColor: BORDER }}>
+                <label className="text-sm font-medium flex items-center gap-1.5" style={{ color: INK }}>
+                  <Tag className="w-4 h-4" style={{ color: MUTE }} />
+                  Coupon Code
+                </label>
+
+                {appliedCoupon ? (
+                  <div
+                    className="flex items-center justify-between mt-1.5 rounded-xl border px-3 py-2.5"
+                    style={{ borderColor: ACCENT, backgroundColor: SOFT }}
+                  >
+                    <span className="text-sm font-semibold" style={{ color: ACCENT }}>
+                      {appliedCoupon.code} · Rs. {appliedCoupon.discount} off
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoupon}
+                      aria-label="Remove coupon"
+                    >
+                      <X className="w-4 h-4" style={{ color: MUTE }} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2 mt-1.5">
+                    <Input
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      placeholder="e.g. SAVE20"
+                      className="rounded-xl uppercase"
+                      style={{ borderColor: BORDER }}
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      disabled={applyingCoupon || !couponCode.trim()}
+                      className="text-white rounded-xl shrink-0 disabled:opacity-60"
+                      style={{ backgroundColor: ACCENT }}
+                    >
+                      {applyingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div
               className="flex items-center justify-between mt-5 pt-4 border-t text-base font-bold"
               style={{ borderColor: BORDER, color: INK }}
@@ -239,6 +359,16 @@ export default function Checkout(){
               >
                 <span>Delivery Fee</span>
                 <span>Rs. {deliveryFee}</span>
+              </div>
+            )}
+
+            {appliedCoupon && (
+              <div
+                className="flex items-center justify-between mt-2 text-sm font-medium"
+                style={{ color: SUCCESS }}
+              >
+                <span>Discount ({appliedCoupon.code})</span>
+                <span>- Rs. {appliedCoupon.discount}</span>
               </div>
             )}
 
