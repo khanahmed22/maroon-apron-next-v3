@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { useMutation } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { useCart } from "@/zustand/cartStore"
-import { useState } from "react"
+import { useState,useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { User, Mail, Phone, MapPin, Store, Truck, ShoppingBag, Tag, X, Loader2 } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { UserAuth } from "../AuthContext"
 
 interface CustomerProps {
   orderNumber: string;
@@ -48,6 +49,8 @@ interface AppliedCoupon {
 export default function Checkout(){
   const {cart,clearCart} = useCart()
   const router = useRouter()
+  const {session} = UserAuth()
+
   const subtotal = cart.reduce((prev, item) => prev + item.price, 0);
   function generateOrderNumber(): number {
     return Date.now();
@@ -74,6 +77,16 @@ export default function Checkout(){
   });
 
   
+  useEffect(() => {
+  if (session?.email) {
+    setCustDetails((prev) => ({
+      ...prev,
+      custEmail: session.email,
+    }));
+  }
+}, [session]);
+
+  
   
   const restId = cart[0]?.restId
 
@@ -97,7 +110,7 @@ export default function Checkout(){
 
   });
 
-   // ================= COUPON =================
+   
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
@@ -213,9 +226,6 @@ export default function Checkout(){
               : "",
         },
         cart,
-        // Nothing has been recorded for this coupon yet — the order
-        // controller should redeem it (CouponUsage row + usedCount++)
-        // in the same transaction as creating the order.
         coupon: appliedCoupon
           ? {
               couponId: appliedCoupon.couponId,
@@ -408,6 +418,7 @@ export default function Checkout(){
                   />
                   <Input
                     type="text"
+                    placeholder="Enter Name"
                     className="pl-10 rounded-xl"
                     style={{ borderColor: BORDER }}
                     value={custDetails.custName}
@@ -430,6 +441,8 @@ export default function Checkout(){
                   />
                   <Input
                     type="email"
+                    disabled={session ? true:false}
+                    placeholder="Enter Email"
                     className="pl-10 rounded-xl"
                     style={{ borderColor: BORDER }}
                     value={custDetails.custEmail}
@@ -452,6 +465,7 @@ export default function Checkout(){
                   />
                   <Input
                     value={custDetails.custPhone}
+                    placeholder="Enter Phone"
                     className="pl-10 rounded-xl"
                     style={{ borderColor: BORDER }}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {

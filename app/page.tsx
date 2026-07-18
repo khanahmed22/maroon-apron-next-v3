@@ -66,6 +66,7 @@ interface RestListProps {
   restPhone: number
   restEmail: string
   restAddress: string
+  restAnnouncement:string
   restInstagram: string
   restFB: string,
   restTheme:string
@@ -241,6 +242,11 @@ export default function Home() {
       className="min-h-screen w-full bg-background text-foreground"
       style={{ fontFamily: "'Inter', ui-sans-serif, system-ui" }}
     >
+     
+        {restDetails?.getRest?.restAnnouncement && <div className="bg-accent-foreground text text-accent font-bold flex items-center justify-center h-10 w-full">
+          <h1>{restDetails?.getRest?.restAnnouncement || ""}</h1>
+        </div> }
+     
       {/* ================= NAVBAR ================= */}
       <nav className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-border flex items-center justify-between gap-4 px-4 sm:px-6 h-16">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -355,7 +361,7 @@ export default function Home() {
                     </span>
                   )}
                   <img
-                    src={m.imageUrl || "https://placehold.co/400x300"}
+                    src={m.imageUrl || restDetails?.getRest?.restLogo || "https://placehold.co/400x300"}
                     alt={m.name}
                     className="w-full h-40 object-cover"
                   />
