@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from "uuid"
 import { Button } from "@/components/ui/button"
 import Cart from "@/components/Cart"
 import { resolveThemeName } from "@/lib/themes"
+import Image from "next/image"
 import {
   ShoppingBag,
   Search,
@@ -34,10 +35,7 @@ import {
 } from "@/components/ui/dialog"
 
 const ACCENT = "#D6293F"
-const INK = "#171717"
 const MUTE = "#6B7280"
-const BORDER = "#E7E5E4"
-const SOFT = "#FBF7F6"
 
 interface VariantProps {
   id: string
@@ -80,6 +78,18 @@ interface Selection {
   variantId?: string
   quantity: number
 }
+interface CartItem {
+  id: string;
+  dbId:string,
+  name: string;
+  price: number;
+  quantity:number,
+  variantId?:string
+  variantName?: string,
+  variantPrice?: number,
+  restId?:string,
+  restName:string
+}
 
 export default function Home() {
   const subdomain = useSubdomain()
@@ -103,7 +113,7 @@ export default function Home() {
     }
   }
 
-  const { data: restQuery = [], isPending } = useQuery<InventProps[]>({
+  const { data: restQuery = [], isPending:menuPending } = useQuery<InventProps[]>({
     queryKey: ["restquery"],
     queryFn: fetchMenu,
     staleTime: 5 * 60 * 1000,
@@ -128,7 +138,7 @@ export default function Home() {
     }
   }
 
-  const { data: restDetails } = useQuery<RestResponse>({
+  const { data: restDetails,isPending:detailsPending } = useQuery<RestResponse>({
     queryKey: ["restDetails", subdomain],
     queryFn: fetchRestDetails,
     enabled: !!subdomain,
@@ -168,7 +178,7 @@ export default function Home() {
 
   const categories = ["all", ...new Set(restQuery.map((item) => item.category))]
 
-  const cartCount = cart?.reduce((sum: number, c: any) => sum + c.quantity, 0) ?? 0
+  const cartCount = cart?.reduce((sum: number, c: CartItem) => sum + c.quantity, 0) ?? 0
 
   const confirmAddToCart = () => {
   if (!activeItem) return;
@@ -217,12 +227,12 @@ export default function Home() {
 
   const activeThemeName = resolveThemeName(restDetails?.getRest?.restTheme)
 
-    const INK = "#111111"
+  
 
 
 
 
-  if (isPending) {
+  if (menuPending || detailsPending) {
     return (
       <div
         className="min-h-screen flex flex-col items-center justify-center gap-3"
@@ -250,7 +260,9 @@ export default function Home() {
       {/* ================= NAVBAR ================= */}
       <nav className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-border flex items-center justify-between gap-4 px-4 sm:px-6 h-16">
         <div className="flex items-center gap-2.5 min-w-0">
-          <img
+          <Image
+            width={200}
+            height={200}
             className="w-9 h-9 rounded-full object-cover border border-border"
             src={restDetails?.getRest?.restLogo || "https://placehold.co/200x200"}
             alt={restDetails?.getRest?.restName || "Restaurant logo"}
@@ -298,7 +310,9 @@ export default function Home() {
       <main className="pb-24">
         {/* ================= BANNER ================= */}
         <div className="relative">
-          <img
+          <Image
+            width={1200}
+            height={400}
             className="w-full h-40 sm:h-56 md:h-64 object-cover"
             src={restDetails?.getRest?.restBanner || "https://placehold.co/1200x400"}
             alt={`${restDetails?.getRest?.restName || "Restaurant"} banner`}
@@ -360,7 +374,9 @@ export default function Home() {
                       Out of Stock
                     </span>
                   )}
-                  <img
+                  <Image
+                    width={400}
+                    height={300}
                     src={m.imageUrl || restDetails?.getRest?.restLogo || "https://placehold.co/400x300"}
                     alt={m.name}
                     className="w-full h-40 object-cover"
@@ -412,7 +428,9 @@ export default function Home() {
                 <DialogDescription />
               </DialogHeader>
  
-              <img
+              <Image
+                width={400}
+                height={300}
                 src={activeItem.imageUrl || "https://placehold.co/400x300"}
                 alt={activeItem.name}
                 className="w-full h-44 object-cover rounded-xl"

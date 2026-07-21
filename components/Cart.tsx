@@ -12,11 +12,20 @@ import {
 } from "@/components/ui/dialog"
 import { ShoppingBag, Trash2 } from "lucide-react"
 
-const ACCENT = "#D6293F"
-const INK = "#171717"
-const MUTE = "#6B7280"
-const BORDER = "#E7E5E4"
-const SOFT = "#FBF7F6"
+
+
+interface CartItem {
+  id: string;
+  dbId:string,
+  name: string;
+  price: number;
+  quantity:number,
+  variantId?:string
+  variantName?: string,
+  variantPrice?: number,
+  restId?:string,
+  restName:string
+}
 
 interface CartProps {
   cartOpen: boolean
@@ -27,8 +36,13 @@ interface CartProps {
 export default function Cart({ cartOpen, setCartOpen ,activeThemeName}: CartProps) {
   const { cart, clearCart, deleteCart } = useCart()
   const router = useRouter()
+  const ACCENT = "#D6293F"
+const INK = "#171717"
+const MUTE = "#6B7280"
+const BORDER = "#E7E5E4"
+const SOFT = "#FBF7F6"
 
-  const subtotal = cart?.reduce((sum: number, c: any) => sum + c.price, 0) ?? 0
+  const subtotal = cart?.reduce((sum: number, c: CartItem) => sum + c.price, 0) ?? 0
 
   return (
     <Dialog open={cartOpen} onOpenChange={setCartOpen}>
@@ -44,7 +58,7 @@ export default function Cart({ cartOpen, setCartOpen ,activeThemeName}: CartProp
         {cart?.length > 0 ? (
           <>
             <div className="max-h-[50vh] overflow-y-auto -mx-1 px-1 space-y-3">
-              {cart.map((c: any) => (
+              {cart.map((c: CartItem) => (
                 <div
                   key={c.id}
                   className="flex items-start justify-between gap-3 rounded-xl border p-3"

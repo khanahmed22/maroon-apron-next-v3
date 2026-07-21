@@ -11,6 +11,7 @@ import {
   Receipt,
   Store,
 } from 'lucide-react'
+import Link from 'next/link'
 
 interface CartItem {
   id: string
@@ -106,18 +107,18 @@ export default function OrderPlaced() {
             className="text-sm mb-6"
             style={{ color: MUTE }}
           >
-            We couldn't find this order. The link may be incorrect,
+            We could not find this order. The link may be incorrect,
             the order may not exist, or something went wrong while
             placing your order.
           </p>
 
-          <a
+          <Link
             href="/"
             className="inline-flex items-center justify-center px-5 py-2 rounded-xl font-semibold text-white"
             style={{ backgroundColor: ACCENT }}
           >
             Back to Menu
-          </a>
+          </Link>
         </div>
       </div>
     )
@@ -387,13 +388,13 @@ const statusStyles = getStatusStyles(orderQuery?.status)
           </div>
         </div>
 
-        <a
+        <Link
           href="/"
           className="block text-center mt-8 text-sm font-semibold hover:underline"
           style={{ color: ACCENT }}
         >
           Back to menu
-        </a>
+        </Link>
       </div>
     </div>
   )

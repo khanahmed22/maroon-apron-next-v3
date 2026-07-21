@@ -3,7 +3,7 @@ import { useState } from "react"
 import { UserAuth } from "@/app/AuthContext";
 import { toast } from "sonner";
 import { useSubdomain } from "@/app/context/SubdomainProvider";
-import { Mail, Lock, Eye, EyeOff, ChefHat, UserRound } from "lucide-react"
+import { Mail, Lock, Eye, EyeOff, UserRound } from "lucide-react"
 
 export default function Register(){
   const [name,setName] = useState<string>("")
@@ -19,7 +19,7 @@ const MUTE = "#6B7280"
 const BORDER = "#E7E5E4"
 const SOFT = "#FBF7F6"
 
-  const registerUser =async(e:any)=>{
+  const registerUser =async(e:React.SubmitEvent<HTMLFormElement>)=>{
     e.preventDefault()
     const role ='customer'
 
@@ -88,7 +88,7 @@ const SOFT = "#FBF7F6"
               required
               type="name"
               className="w-full pl-10 pr-3 py-2.5 border rounded-xl text-sm outline-none focus:ring-2 transition-shadow"
-              style={{ borderColor: BORDER, color: INK, ["--tw-ring-color" as any]: "#F3D3D8" }}
+              style={{ borderColor: BORDER, color: INK, ["--tw-ring-color" as string]: "#F3D3D8" }}
               placeholder="John Doe"
               value={name}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
@@ -109,7 +109,7 @@ const SOFT = "#FBF7F6"
               required
               type="email"
               className="w-full pl-10 pr-3 py-2.5 border rounded-xl text-sm outline-none focus:ring-2 transition-shadow"
-              style={{ borderColor: BORDER, color: INK, ["--tw-ring-color" as any]: "#F3D3D8" }}
+              style={{ borderColor: BORDER, color: INK, ["--tw-ring-color" as string]: "#F3D3D8" }}
               placeholder="you@example.com"
               value={email}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
@@ -130,7 +130,7 @@ const SOFT = "#FBF7F6"
               required
               type={showPassword ? "text" : "password"}
               className="w-full pl-10 pr-10 py-2.5 border rounded-xl text-sm outline-none focus:ring-2 transition-shadow"
-              style={{ borderColor: BORDER, color: INK, ["--tw-ring-color" as any]: "#F3D3D8" }}
+              style={{ borderColor: BORDER, color: INK, ["--tw-ring-color" as string]: "#F3D3D8" }}
               placeholder="Enter your password"
               value={password}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}

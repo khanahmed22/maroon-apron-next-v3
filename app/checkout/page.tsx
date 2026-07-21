@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { useMutation } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { useCart } from "@/zustand/cartStore"
-import { useState,useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { User, Mail, Phone, MapPin, Store, Truck, ShoppingBag, Tag, X, Loader2 } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
@@ -65,7 +65,7 @@ export default function Checkout(){
   const [custDetails, setCustDetails] = useState<CustomerProps>({
     orderNumber: String(generateOrderNumber()),
     custName: "",
-    custEmail: "",
+    custEmail: session?.email ?? "",
     custPhone: "",
     custAddress: "",
     recieveMethod: "",
@@ -77,14 +77,7 @@ export default function Checkout(){
   });
 
   
-  useEffect(() => {
-  if (session?.email) {
-    setCustDetails((prev) => ({
-      ...prev,
-      custEmail: session.email,
-    }));
-  }
-}, [session]);
+ 
 
   
   

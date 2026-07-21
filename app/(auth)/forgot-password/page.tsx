@@ -70,7 +70,7 @@ useEffect(() => {
           Forgot Password
         </h1>
         <p className="text-sm mt-1 mb-6" style={{ color: MUTE }}>
-          Enter your email and we'll send you a link to reset it.
+          Enter your email and we will send you a link to reset it.
         </p>
  
         <form onSubmit={sendForgotPassword} className="flex flex-col gap-y-5">

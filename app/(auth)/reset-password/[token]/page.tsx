@@ -2,15 +2,13 @@
 
 import { useParams,useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Lock, Eye, EyeOff, ChefHat, AlertCircle } from "lucide-react"
+import { Lock, Eye, EyeOff, AlertCircle } from "lucide-react"
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useSubdomain } from "@/app/context/SubdomainProvider";
 import { UserAuth } from "@/app/AuthContext";
 export default function ResetPassword() {
   const { token } = useParams();
   const router = useRouter();
-  const subdomain = useSubdomain()
   const {session} = UserAuth()
   const [valid, setValid] = useState(false);
   const [loading, setLoading] = useState(true);
