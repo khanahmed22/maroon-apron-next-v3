@@ -52,7 +52,8 @@ interface InventProps {
   restId: string
   restName: string
   category: string,
-  stockAmount: number
+  stockAmount: number,
+  description:string,
 }
 
 interface RestListProps {
@@ -84,7 +85,8 @@ interface CartItem {
   name: string;
   price: number;
   quantity:number,
-  variantId?:string
+
+  variantId?:string,
   variantName?: string,
   variantPrice?: number,
   restId?:string,
@@ -263,6 +265,7 @@ export default function Home() {
           <Image
             width={200}
             height={200}
+            loading="eager"
             className="w-9 h-9 rounded-full object-cover border border-border"
             src={restDetails?.getRest?.restLogo || "https://placehold.co/200x200"}
             alt={restDetails?.getRest?.restName || "Restaurant logo"}
@@ -313,6 +316,7 @@ export default function Home() {
           <Image
             width={1200}
             height={400}
+            loading="eager"
             className="w-full h-40 sm:h-56 md:h-64 object-cover"
             src={restDetails?.getRest?.restBanner || "https://placehold.co/1200x400"}
             alt={`${restDetails?.getRest?.restName || "Restaurant"} banner`}
@@ -425,7 +429,7 @@ export default function Home() {
             <>
               <DialogHeader>
                 <DialogTitle>{activeItem.name}</DialogTitle>
-                <DialogDescription />
+                <DialogDescription>{activeItem.description}</DialogDescription>
               </DialogHeader>
  
               <Image

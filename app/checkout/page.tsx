@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UserAuth } from "../AuthContext"
+import { useSubdomain } from "../context/SubdomainProvider"
 
 interface CustomerProps {
   orderNumber: string;
@@ -26,10 +27,14 @@ interface CustomerProps {
   recieveMethod: string;
   status: string;
   createdAt: Date;
-
   orderTotal: number;
   deliveryArea: string,
-  deliveryFee: string
+  deliveryFee: string,
+  discountAmount: String,
+  isPreOrder:boolean,
+  scheduledDate: string,
+  scheduledWindow: string,
+
 }
 
 interface AreaProps {
@@ -46,11 +51,35 @@ interface AppliedCoupon {
   discount: number;
 }
 
+interface RestListProps {
+  id: string
+  restName: string
+  subdomain: string
+  restLogo: string
+  restBanner: string
+  restPhone: number
+  restEmail: string
+  restAddress: string
+  restAnnouncement:string
+  restInstagram: string
+  restFB: string,
+  restTheme:string,
+  preOrdersEnabled?: boolean
+  preOrderMinHours?: number
+  preOrderMaxDays?: number
+  pickUpWindows?: string[]
+  deliveryWindows?: string[]
+}
+interface RestResponse {
+  getRest: RestListProps
+}
+
+
 export default function Checkout(){
   const {cart,clearCart} = useCart()
   const router = useRouter()
   const {session} = UserAuth()
-
+  const subdomain = useSubdomain()
   const subtotal = cart.reduce((prev, item) => prev + item.price, 0);
   function generateOrderNumber(): number {
     return Date.now();
@@ -74,7 +103,34 @@ export default function Checkout(){
     deliveryArea:"",
     deliveryFee:"",
     orderTotal: 0,
+    discountAmount: "",
+    isPreOrder: false,
+    scheduledDate: "",
+    scheduledWindow: "",
+    
   });
+
+  const fetchRestDetails = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/restDetails`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ subdomain: subdomain }),
+        })
+        return res.json()
+      } catch (err) {
+        console.log(err)
+      }
+    }
+  
+    const { data: restDetails,isPending:detailsPending } = useQuery<RestResponse>({
+      queryKey: ["restDetails", subdomain],
+      queryFn: fetchRestDetails,
+      enabled: !!subdomain,
+      staleTime: 5 * 60 * 1000,
+    })
 
   
  
@@ -159,11 +215,12 @@ export default function Checkout(){
   const selectedArea = deliveryList?.find(
     (area) => area.areaId === custDetails.deliveryArea
   );
-
   const deliveryFee = Number(selectedArea?.deliveryFee ?? 0);
   const minimumOrder = Number(selectedArea?.minOrder ?? 0);
   const discountAmount = appliedCoupon?.discount ?? 0;
   const finalTotal = Math.max(0, subtotal + deliveryFee - discountAmount);
+
+
 
   const belowMinimumOrder =
     custDetails.recieveMethod === "delivery" &&
@@ -196,6 +253,15 @@ export default function Checkout(){
           `Minimum order for ${selectedArea?.areaName} is Rs.${minimumOrder}`
         );
       }
+      if (custDetails.isPreOrder) {
+  if (!custDetails.scheduledDate) {
+    return toast.error("Please select a date.");
+  }
+
+  if (!custDetails.scheduledWindow) {
+    return toast.error("Please select a time window.");
+  }
+}
     }
     const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/orders`, {
       method: "POST",
@@ -205,9 +271,9 @@ export default function Checkout(){
       body: JSON.stringify({
         custDetails: {
           ...custDetails,
-          restId: cart[0]?.restId,
+          restId: restDetails?.getRest?.id,
           orderTotal: finalTotal,
-          restName: cart[0]?.restName,
+          restName: restDetails?.getRest?.restName,
           deliveryArea:
             custDetails.recieveMethod === "delivery"
               ? selectedArea?.areaName ?? ""
@@ -219,6 +285,7 @@ export default function Checkout(){
               : "",
         },
         cart,
+        
         coupon: appliedCoupon
           ? {
               couponId: appliedCoupon.couponId,
@@ -610,6 +677,74 @@ export default function Checkout(){
                   </div>
                 </div>
               )}
+
+              {restDetails?.getRest?.preOrdersEnabled &&
+  (custDetails.recieveMethod === "pickup" ||
+    custDetails.recieveMethod === "delivery") && (
+    <div className="space-y-4 rounded-xl border p-4" style={{ borderColor: BORDER }}>
+      <label className="flex items-center gap-2 text-sm font-medium">
+        <input
+          type="checkbox"
+          checked={custDetails.isPreOrder}
+          onChange={(e) =>
+            setCustDetails({
+              ...custDetails,
+              isPreOrder: e.target.checked,
+              scheduledDate: "",
+              scheduledWindow: "",
+            })
+          }
+        />
+        Schedule your Order
+      </label>
+
+      {custDetails.isPreOrder && (
+        <>
+          <Input
+            type="date"
+            value={custDetails.scheduledDate}
+            onChange={(e) =>
+              setCustDetails({
+                ...custDetails,
+                scheduledDate: e.target.value,
+              })
+            }
+          />
+
+          <Select
+            value={custDetails.scheduledWindow}
+            onValueChange={(value) =>
+              setCustDetails({
+                ...custDetails,
+                scheduledWindow: value,
+              })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue
+                placeholder={
+                  custDetails.recieveMethod === "pickup"
+                    ? "Select Pickup Window"
+                    : "Select Delivery Window"
+                }
+              />
+            </SelectTrigger>
+
+            <SelectContent>
+              {(custDetails.recieveMethod === "pickup"
+                ? restDetails?.getRest?.pickUpWindows
+                : restDetails?.getRest?.deliveryWindows
+              )?.map((window) => (
+                <SelectItem key={window} value={window}>
+                  {window}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </>
+      )}
+    </div>
+  )}
 
               <Button
                 type="submit"

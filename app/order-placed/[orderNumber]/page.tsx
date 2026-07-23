@@ -36,6 +36,9 @@ interface OrderProps {
   orderTotal: number,
   deliveryArea:string,
   deliveryFee: string
+  isPreOrder:boolean,
+  scheduledDate: string,
+  scheduledWindow: string,
 }
 
 export default function OrderPlaced() {
@@ -59,6 +62,14 @@ export default function OrderPlaced() {
 
     return res.json()
   }
+
+  function formatPreorderDate(date: string | Date): string {
+  return new Date(date).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
 
   const {
     data: orderQuery,
@@ -295,15 +306,28 @@ const statusStyles = getStatusStyles(orderQuery?.status)
               </div>
             )}
 
-            <div className="flex items-center gap-3">
-              <Store
-                className="w-4 h-4 shrink-0"
-                style={{ color: ACCENT }}
-              />
-              <span style={{ color: INK }}>
-                {orderQuery.recieveMethod}
-              </span>
-            </div>
+            <div className="flex items-center gap-4">
+  <div className="flex items-center gap-2">
+    <Store
+      className="w-4 h-4 shrink-0"
+      style={{ color: ACCENT }}
+    />
+    <span style={{ color: INK }}>
+      {orderQuery.recieveMethod}
+    </span>
+  </div>
+
+  {orderQuery.isPreOrder && (
+    <div className="flex flex-col border-l pl-4" style={{ borderColor: BORDER }}>
+      <span className="text-sm font-medium" style={{ color: INK }}>
+        {formatPreorderDate(orderQuery.scheduledDate)}
+      </span>
+      <span className="text-xs" style={{ color: MUTE }}>
+        {orderQuery.scheduledWindow}
+      </span>
+    </div>
+  )}
+</div>
           </div>
         </div>
 
