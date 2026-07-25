@@ -386,12 +386,10 @@ export default function Home() {
                     className="w-full h-40 object-cover"
                   />
  
-                  <div className="p-4 flex flex-col flex-1">
+                  <div className="p-4 flex flex-col flex-1 gap-y-2">
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <h3 className="font-semibold text-base leading-snug">{m.name}</h3>
-                      <span className="font-bold text-sm shrink-0 text-primary">
-                        Rs. {m.price}
-                      </span>
+                      
                     </div>
  
                     {m.variants?.length > 0 && (
