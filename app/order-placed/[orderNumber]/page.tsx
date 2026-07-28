@@ -2,6 +2,7 @@
 
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
+import { useSubdomain } from '@/app/context/SubdomainProvider'
 import {
   CheckCircle2,
   User,
@@ -12,7 +13,14 @@ import {
   Store,
 } from 'lucide-react'
 import Link from 'next/link'
+import dynamic from "next/dynamic";
 
+const Map = dynamic(() => import("@/components/Map"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[400px] w-full rounded-md bg-muted animate-pulse" />
+  ),
+});
 interface CartItem {
   id: string
   name: string
@@ -41,15 +49,68 @@ interface OrderProps {
   scheduledWindow: string,
 }
 
+interface RestListProps {
+  id: string
+  restName: string
+  subdomain: string
+  restLogo: string
+  restBanner: string
+  restPhone: number
+  restEmail: string
+  restAddress: string
+  restAnnouncement:string
+  restInstagram: string
+  restFB: string,
+  restTheme:string,
+  preOrdersEnabled?: boolean
+  preOrderMinHours?: number
+  preOrderMaxDays?: number
+  pickUpWindows?: string[]
+  deliveryWindows?: string[]
+  lat:number,
+  long:number
+}
+interface RestResponse {
+  getRest: RestListProps
+}
+
 export default function OrderPlaced() {
   const params = useParams()
   const orderNumber = params.orderNumber as string
+  const subdomain = useSubdomain()
 
   const ACCENT = '#D6293F'
   const INK = '#171717'
   const MUTE = '#6B7280'
   const BORDER = '#E7E5E4'
   const SOFT = '#FBF7F6'
+
+  const fetchRestDetails = async () => {
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/restDetails`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ subdomain: subdomain }),
+          })
+          return res.json()
+        } catch (err) {
+          console.log(err)
+        }
+      }
+    
+      const { data: restDetails,isPending:detailsPending } = useQuery<RestResponse>({
+        queryKey: ["restDetails", subdomain],
+        queryFn: fetchRestDetails,
+        enabled: !!subdomain,
+        staleTime: 5 * 60 * 1000,
+      })
+
+    const restAddress = restDetails?.getRest?.restAddress || ""
+
+    const lat = restDetails?.getRest?.lat || 0.0
+    const long = restDetails?.getRest?.long || 0.0
 
   const fetchOrder = async (): Promise<OrderProps> => {
     const res = await fetch(
@@ -328,8 +389,19 @@ const statusStyles = getStatusStyles(orderQuery?.status)
     </div>
   )}
 </div>
+{orderQuery?.recieveMethod === "pickup" && <div className='flex gap-x-2 items-center flex-col gap-y-2'>
+  <MapPin className="w-7 h-7 shrink-0"
+      style={{ color: ACCENT }}/>
+  <span><span className='font-bold'>Pickup Order here: </span>{restAddress}</span>{restDetails?.getRest?.lat != null &&
+  restDetails?.getRest?.long != null && (
+    <Map
+      latitude={restDetails.getRest.lat}
+      longitude={restDetails.getRest.long}
+    />
+)}</div>}
           </div>
         </div>
+
 
         {/* Order Summary */}
         <div

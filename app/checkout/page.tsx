@@ -6,7 +6,7 @@ import { toast } from "sonner"
 import { useCart } from "@/zustand/cartStore"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { User, Mail, Phone, MapPin, Store, Truck, ShoppingBag, Tag, X, Loader2 } from "lucide-react"
+import { User, Mail, Phone, MapPin, Store, Truck, ShoppingBag, Tag, X, Loader2, Trash2 } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import {
   Select,
@@ -74,9 +74,15 @@ interface RestResponse {
   getRest: RestListProps
 }
 
+interface FixRate {
+  rate: number,
+  fixMode: boolean,
+  FixMinOrder: number
+}
+
 
 export default function Checkout(){
-  const {cart,clearCart} = useCart()
+  const {cart,clearCart,deleteCart} = useCart()
   const router = useRouter()
   const {session} = UserAuth()
   const subdomain = useSubdomain()
@@ -137,7 +143,7 @@ export default function Checkout(){
 
   
   
-  const restId = cart[0]?.restId
+  const restId = restDetails?.getRest?.id
 
   const fetchDeliveryZones = async (): Promise<AreaProps[]> => {
     const res = await fetch(
@@ -215,12 +221,43 @@ export default function Checkout(){
   const selectedArea = deliveryList?.find(
     (area) => area.areaId === custDetails.deliveryArea
   );
-  const deliveryFee = Number(selectedArea?.deliveryFee ?? 0);
-  const minimumOrder = Number(selectedArea?.minOrder ?? 0);
+  const fetchFixRate = async()=>{
+   try{
+     const fixRate = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/fix-rate/${restId}/view`)
+     const data = await fixRate.json()
+     return data
+   }
+   catch(err){
+     console.log(err)
+   }
+  }
+
+  const {data:fixRateM} = useQuery<FixRate>({
+   queryKey:['fixRate', restId],
+   queryFn: fetchFixRate,
+   enabled:!!restId,
+   staleTime: 5 * 60 * 1000, //5min
+  })
+  const deliveryFee =
+    custDetails.recieveMethod === "delivery"
+      ? fixRateM?.fixMode
+        ? Number(fixRateM?.rate ?? 0)
+        : Number(selectedArea?.deliveryFee ?? 0)
+      : 0;
   const discountAmount = appliedCoupon?.discount ?? 0;
   const finalTotal = Math.max(0, subtotal + deliveryFee - discountAmount);
+  
 
 
+
+  // Same fix-mode-first logic for minimum order: fixed min order takes
+  // precedence over the area-based minimum when fix mode is enabled.
+  const minimumOrder =
+    custDetails.recieveMethod === "delivery"
+      ? fixRateM?.fixMode
+        ? Number(fixRateM?.FixMinOrder ?? 0)
+        : Number(selectedArea?.minOrder ?? 0)
+      : 0;
 
   const belowMinimumOrder =
     custDetails.recieveMethod === "delivery" &&
@@ -229,6 +266,16 @@ export default function Checkout(){
 
   const deliveryAreaMissing =
     custDetails.recieveMethod === "delivery" && !custDetails.deliveryArea;
+
+    
+
+  
+
+  
+
+
+  
+
 
   const placeOrder = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -250,7 +297,9 @@ export default function Checkout(){
       }
       if (belowMinimumOrder) {
         return toast.error(
-          `Minimum order for ${selectedArea?.areaName} is Rs.${minimumOrder}`
+          fixRateM?.fixMode
+            ? `Minimum order is Rs.${minimumOrder}`
+            : `Minimum order for ${selectedArea?.areaName} is Rs.${minimumOrder}`
         );
       }
       if (custDetails.isPreOrder) {
@@ -308,6 +357,9 @@ export default function Checkout(){
     onSuccess: () => {
       toast.success("Order Placed");
     },
+    onError:()=>{
+      toast.error("Order could not be placed")
+    }
   });
 
   return(
@@ -354,6 +406,7 @@ export default function Checkout(){
                     <span className="font-semibold text-sm shrink-0" style={{ color: INK }}>
                       Rs. {c.price}
                     </span>
+                    <Button onClick={()=>deleteCart(c.id)}><Trash2/></Button>
                   </div>
                 ))}
               </div>
@@ -669,7 +722,7 @@ export default function Checkout(){
                             key={area.areaId}
                             value={area.areaId}
                           >
-                            {area.areaName} ({area.cityName}) • Rs. {area.deliveryFee}
+                            {area.areaName} ({area.cityName}) 
                           </SelectItem>
                         ))}
                       </SelectContent>

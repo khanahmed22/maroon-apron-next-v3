@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist_Mono, Outfit, Inter } from "next/font/google";
 import { headers } from "next/headers";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 import { cn } from "@/lib/utils";
 
 import { SubdomainProvider } from "./context/SubdomainProvider";
@@ -9,6 +10,7 @@ import ReactQueryProvider from "@/components/ReactQueryProvider";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "sonner";
 import { AuthContextProvider } from "./AuthContext";
+
 
 const interHeading = Inter({
   subsets: ["latin"],
