@@ -551,8 +551,8 @@ export default function Home() {
       </Dialog>
  
       {/* ================= FOOTER ================= */}
-      <footer className="border-t border-border px-4 sm:px-6 py-8">
-        <div className="max-w-3xl mx-auto flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-8 text-sm text-muted-foreground">
+      <footer className="border-t border-accent-foreground ">
+        <div className="max-w-3xl mx-auto flex flex-col items-center justify-between sm:flex-row flex-wrap gap-4 sm:gap-8 text-sm text-muted-foreground py-7">
           {restDetails?.getRest?.restPhone && (
             <span className="flex items-center gap-2">
               <Phone className="w-4 h-4 text-primary" />
@@ -565,12 +565,29 @@ export default function Home() {
               {restDetails.getRest.restAddress}
             </span>
           )}
+          <div className="flex gap-x-6">
           {restDetails?.getRest?.restInstagram && (
-            <span className="flex items-center gap-2">{restDetails.getRest.restInstagram}</span>
+            <a target="_blank" href={restDetails?.getRest?.restInstagram} className="flex items-center gap-2"><svg
+        className="h-5 w-5"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+      >
+        <path d="M7.75 2C4.574 2 2 4.574 2 7.75v8.5C2 19.426 4.574 22 7.75 22h8.5C19.426 22 22 19.426 22 16.25v-8.5C22 4.574 19.426 2 16.25 2h-8.5zm0 1.8h8.5a3.95 3.95 0 013.95 3.95v8.5a3.95 3.95 0 01-3.95 3.95h-8.5a3.95 3.95 0 01-3.95-3.95v-8.5A3.95 3.95 0 017.75 3.8zm8.95 1.35a1.05 1.05 0 100 2.1 1.05 1.05 0 000-2.1zM12 7a5 5 0 100 10 5 5 0 000-10zm0 1.8A3.2 3.2 0 1112 15.2 3.2 3.2 0 0112 8.8z" />
+      </svg></a>
           )}
           {restDetails?.getRest?.restFB && (
-            <span className="flex items-center gap-2">{restDetails.getRest.restFB}</span>
+            <a target="_blank" href={restDetails.getRest.restFB} className="flex items-center gap-2"> <svg
+        className="h-5 w-5"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+      >
+        <path d="M22 12a10 10 0 10-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.1 0 2.25.2 2.25.2v2.46H15.2c-1.25 0-1.64.77-1.64 1.57V12h2.8l-.45 2.89h-2.35v6.99A10 10 0 0022 12z" />
+      </svg></a>
           )}
+          </div>
+        </div>
+        <div className="flex items-center justify-center text-sm mt-3 bg-red-500 text-white p-3 w-full">
+          <h1>Powered by Crimson Castle</h1>
         </div>
       </footer>
     </div>
