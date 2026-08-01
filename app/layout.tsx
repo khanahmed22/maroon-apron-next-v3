@@ -11,6 +11,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "sonner";
 import { AuthContextProvider } from "./AuthContext";
 
+
 const interHeading = Inter({
   subsets: ["latin"],
   variable: "--font-heading",
@@ -25,6 +26,25 @@ const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
 });
+
+function resolveTenant(host: string | null): string | null {
+  if (!host) return null;
+
+  const hostname = host.split(":")[0].toLowerCase();
+
+  // Development
+  if (hostname.endsWith(".localhost")) {
+    return hostname.split(".")[0];
+  }
+
+  // Production
+  if (hostname.endsWith(process.env.NEXT_PUBLIC_HOSTNAME!)) {
+    return hostname.split(".")[0];
+  }
+
+  // Custom domain
+  return hostname;
+}
 
 async function getRestaurant() {
   const headerList = await headers();
@@ -68,18 +88,18 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       restaurant.metaDesc ||
       `Order from ${restaurant.restName} online.`,
-
-    icons: {
-      icon: restaurant.restLogo,
-      shortcut: restaurant.restLogo,
-      apple: restaurant.restLogo,
-    },
+      icons: {
+    icon:  restaurant.restLogo,
+    shortcut:restaurant.restLogo,
+    apple:  restaurant.restLogo,
+  },
 
     openGraph: {
       title: restaurant.metaTitle || restaurant.restName,
       description:
         restaurant.metaDesc ||
         `Order from ${restaurant.restName} online.`,
+        
       images: restaurant.ogImage
         ? [restaurant.ogImage]
         : restaurant.restLogo
@@ -107,12 +127,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Fetch the restaurant once and use its canonical subdomain.
-  // This works for both:
-  // - pizzatown.crimsoncastle.shop
-  // - pizzatown.com
-  const restaurant = await getRestaurant();
-  const subdomain = restaurant?.subdomain ?? null;
+  const headerList = await headers();
+  const subdomain = resolveTenant(headerList.get("host"));
 
   return (
     <html
@@ -132,7 +148,7 @@ export default async function RootLayout({
             <ReactQueryProvider>
               <main className="min-h-screen">{children}</main>
 
-              <Toaster richColors position="top-center" />
+              <Toaster richColors position="top-center"/>
               <ReactQueryDevtools initialIsOpen={false} />
             </ReactQueryProvider>
           </SubdomainProvider>
