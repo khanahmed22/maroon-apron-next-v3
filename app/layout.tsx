@@ -128,7 +128,18 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const headerList = await headers();
-  const subdomain = resolveTenant(headerList.get("host"));
+  const host = headerList.get("host");
+  const hostSubdomain = resolveTenant(host);
+
+  let subdomain = hostSubdomain;
+  // For custom domains, hostSubdomain is the raw hostname (e.g. "pizzatown.lol"),
+  // not the actual subdomain — resolve it via the restaurant record.
+  if (hostSubdomain && !host?.split(":")[0].endsWith(process.env.NEXT_PUBLIC_HOSTNAME!) && !host?.split(":")[0].endsWith(".localhost")) {
+    const restaurant = await getRestaurant();
+    if (restaurant?.subdomain) {
+      subdomain = restaurant.subdomain;
+    }
+  }
 
   return (
     <html
@@ -147,7 +158,6 @@ export default async function RootLayout({
           <SubdomainProvider subdomain={subdomain}>
             <ReactQueryProvider>
               <main className="min-h-screen">{children}</main>
-
               <Toaster richColors position="top-center"/>
               <ReactQueryDevtools initialIsOpen={false} />
             </ReactQueryProvider>
