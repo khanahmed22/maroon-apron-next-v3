@@ -289,7 +289,7 @@ export default function Home() {
       style={{ fontFamily: "'Inter', ui-sans-serif, system-ui" }}
     >
      
-        {restDetails?.getRest?.restAnnouncement && <div className="bg-accent-foreground text text-accent font-bold flex items-center justify-center h-10 w-full">
+        {restDetails?.getRest?.restAnnouncement && <div className="p-3 bg-accent-foreground text text-accent font-bold flex items-center justify-center h-10 max-md:h-15 w-full">
           <h1>{restDetails?.getRest?.restAnnouncement || ""}</h1>
         </div> }
      
@@ -317,7 +317,7 @@ export default function Home() {
             <ShoppingBag className="w-4 h-4 mr-1.5" />
             Cart
             {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full text-[11px] font-bold flex items-center justify-center bg-foreground text-background">
+              <span className="absolute -top-1.5 -right-1.5 min-w-4.5 h-4.5 px-1 rounded-full text-[11px] font-bold flex items-center justify-center bg-foreground text-background">
                 {cartCount}
               </span>
             )}
@@ -355,7 +355,7 @@ export default function Home() {
             src={restDetails?.getRest?.restBanner || "https://placehold.co/1200x400"}
             alt={`${restDetails?.getRest?.restName || "Restaurant"} banner`}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-foreground/10 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-foreground/60 via-foreground/10 to-transparent" />
           <div className="absolute bottom-4 left-4 sm:left-6 right-4 flex items-end justify-between gap-3">
             <h1 className="text-white text-2xl sm:text-4xl font-extrabold drop-shadow-sm">
               {restDetails?.getRest?.restName || "Welcome!"}
