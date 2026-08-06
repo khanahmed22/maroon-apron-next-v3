@@ -4,6 +4,7 @@ import { UserAuth } from "@/app/AuthContext";
 import { toast } from "sonner";
 import { useSubdomain } from "@/app/context/SubdomainProvider";
 import { Mail, Lock, Eye, EyeOff, UserRound } from "lucide-react"
+import { useRouter } from "next/navigation";
 
 export default function Register(){
   const [name,setName] = useState<string>("")
@@ -11,6 +12,7 @@ export default function Register(){
   const [password,setPassword] = useState<string>("")
   const subdomain = useSubdomain()
   const {session} = UserAuth()
+  const router = useRouter()
    const [showPassword, setShowPassword] = useState(false)
 
   const ACCENT = "#D6293F"
@@ -53,7 +55,9 @@ const SOFT = "#FBF7F6"
 
   if(session){
     return(
-      <div className="flex font-bold text-lg min-h-screen items-center justify-center"><p>You are already Signed In</p></div>
+      <div className="flex font-bold flex-col gap-y-4 text-lg min-h-screen items-center justify-center"><p>You are already Signed In</p>
+      <button  className="text-white p-3 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity mt-1"
+          style={{ backgroundColor: ACCENT }} onClick={()=>router.push('/account')}>Go to Dashboard</button></div>
     )
   }
   return(
