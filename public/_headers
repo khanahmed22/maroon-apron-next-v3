@@ -4,4 +4,4 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   Permissions-Policy: geolocation=(self), camera=(), microphone=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://res.cloudinary.com; media-src 'self' https://res.cloudinary.com; font-src 'self' data:; connect-src 'self' https://crimson-backend-v3.onrender.com https://res.cloudinary.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self';
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://res.cloudinary.com https://*.tile.openstreetmap.org; media-src 'self' https://res.cloudinary.com; font-src 'self' data:; connect-src 'self' https://crimson-backend-v3.onrender.com https://res.cloudinary.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self';
