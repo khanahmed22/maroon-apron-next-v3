@@ -30,9 +30,9 @@ interface CustomerProps {
   orderTotal: number;
   deliveryArea: string,
   deliveryFee: string,
-  discountAmount: String,
+  discountAmount: string,
   isPreOrder:boolean,
-  scheduledDate: string,
+  scheduledDate: string | null,
   scheduledWindow: string,
 
 }
@@ -111,7 +111,7 @@ export default function Checkout(){
     orderTotal: 0,
     discountAmount: "",
     isPreOrder: false,
-    scheduledDate: "",
+    scheduledDate: null,
     scheduledWindow: "",
     
   });
@@ -303,9 +303,7 @@ export default function Checkout(){
         );
       }
       if (custDetails.isPreOrder) {
-  if (!custDetails.scheduledDate) {
-    return toast.error("Please select a date.");
-  }
+  
 
   if (!custDetails.scheduledWindow) {
     return toast.error("Please select a time window.");
@@ -743,7 +741,7 @@ export default function Checkout(){
             setCustDetails({
               ...custDetails,
               isPreOrder: e.target.checked,
-              scheduledDate: "",
+              scheduledDate: null,
               scheduledWindow: "",
             })
           }
@@ -755,7 +753,7 @@ export default function Checkout(){
         <>
           <Input
             type="date"
-            value={custDetails.scheduledDate}
+            value={custDetails.scheduledDate ?? ""}
             onChange={(e) =>
               setCustDetails({
                 ...custDetails,
