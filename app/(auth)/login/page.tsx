@@ -2,12 +2,13 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation";
 import { UserAuth } from "@/app/AuthContext";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react"
+import { Mail, Lock, Eye, EyeOff,LoaderCircle } from "lucide-react"
 import { toast } from "sonner";
 
 export default function Login(){
   const {session,checkAuth} = UserAuth()
   const [email,setEmail] = useState<string>("")
+  const [loading,setLoading] = useState(false)
   const [password,setPassword] = useState<string>("")
   const router = useRouter()
     const [showPassword, setShowPassword] = useState(false)
@@ -18,36 +19,38 @@ const MUTE = "#6B7280"
 const BORDER = "#E7E5E4"
 const SOFT = "#FBF7F6"
 
-  const loginUser =async(e:React.SubmitEvent<HTMLFormElement>)=>{
-    e.preventDefault()
-    try{
-      const res = await fetch("/api/auth/login", 
+  const loginUser = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setLoading(true);
+
+  try {
+    const res = await fetch(
+      "/api/auth/login",
       {
-        method:'POST',
+        method: "POST",
         credentials: "include",
         headers: {
-          'Content-Type': 'application/json'
-
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({email,password})
+        body: JSON.stringify({ email, password }),
+      },
+    );
 
-        
-      }
-    
-    )
-    const data = await res.json()
-    console.log(data)
-    await checkAuth()
-    router.push('/account')
-  } 
-    
-    catch(err){
-      console.log(err)
-      toast.error('Invalid Email or address')
-      
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+
+      toast.error(data?.message || "Invalid email or password");
+      return;
     }
-    
+
+    await checkAuth();
+    router.push("/account");
+  } catch {
+    toast.error("Unable to connect to the server");
+  } finally {
+    setLoading(false);
   }
+};
 
  
   if(session){
@@ -128,12 +131,20 @@ const SOFT = "#FBF7F6"
         </div>
  
         <button
-          type="submit"
-          className="text-white p-3 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity mt-1"
-          style={{ backgroundColor: ACCENT }}
-        >
-          Log In
-        </button>
+  type="submit"
+  disabled={loading}
+  className="text-white p-3 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity mt-1 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+  style={{ backgroundColor: ACCENT }}
+>
+  {loading ? (
+    <>
+      <LoaderCircle className="w-4 h-4 animate-spin" />
+      Logging In...
+    </>
+  ) : (
+    "Log In"
+  )}
+</button>
  
         <p className="text-sm text-center" style={{ color: MUTE }}>
           Don&apos;t have an account?{" "}
