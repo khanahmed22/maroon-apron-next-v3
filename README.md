@@ -63,6 +63,9 @@ https://www.youtube.com/watch?v=gFH15YnGEZ8&t=6s
 - Neon Postgres
 - Firebase Cloud Messaging (Push Notifications)
 
+Backend Repository: [Crimson Castle Backend](https://github.com/khanahmed22/crimson-backend-v3)
+
+
 ---
 
 # Why Next.js?
