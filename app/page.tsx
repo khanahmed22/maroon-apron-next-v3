@@ -335,9 +335,7 @@ export default function Home() {
             <h1 className="text-white text-2xl sm:text-4xl font-extrabold drop-shadow-sm">
               {restDetails?.getRest?.restName || "Welcome!"}
             </h1>
-            <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-primary text-primary-foreground">
-              <UtensilsCrossed className="w-3.5 h-3.5" /> Order online
-            </span>
+            
           </div>
         </div>
  
