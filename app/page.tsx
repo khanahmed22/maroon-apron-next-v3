@@ -70,6 +70,7 @@ interface RestListProps {
   restFB: string,
   restTheme:string
   crimsonBranding:boolean
+  orderingDisabled:boolean
 }
 interface RestResponse {
   getRest: RestListProps
@@ -247,6 +248,8 @@ export default function Home() {
     )
   }
 
+  const orderingDisabled = restDetails?.getRest?.orderingDisabled
+
   
 
   return (
@@ -255,6 +258,11 @@ export default function Home() {
       className="min-h-screen w-full bg-background text-foreground"
       style={{ fontFamily: "'Inter', ui-sans-serif, system-ui" }}
     >
+
+      {restDetails?.getRest?.orderingDisabled && 
+        <div className="flex items-center justify-center p-3 bg-red-500 font-bold text-white">
+          <p>We are Closed</p>
+        </div>}
      
         {restDetails?.getRest?.restAnnouncement && <div className="p-3 bg-accent-foreground text text-accent font-bold flex items-center justify-center h-10 max-md:h-15 w-full">
           <h1>{restDetails?.getRest?.restAnnouncement || ""}</h1>
@@ -308,7 +316,7 @@ export default function Home() {
           )}
         </div>
  
-        <Cart cartOpen={cartOpen} setCartOpen={setCartOpen} activeThemeName={activeThemeName} />
+        <Cart cartOpen={cartOpen} setCartOpen={setCartOpen} activeThemeName={activeThemeName} orderingDisabled={orderingDisabled} />
       </nav>
  
       <main className="pb-24">
@@ -400,7 +408,7 @@ export default function Home() {
                     )}
                     <button
                       onClick={() => setActiveItem(m)}
-                      disabled={m.stockAmount === 0}
+                      disabled={m.stockAmount === 0 || restDetails?.getRest?.orderingDisabled}
                       className="mt-auto pt-3 w-full text-sm font-semibold rounded-full py-2 px-4 transition-colors
                                  bg-primary text-primary-foreground
                                  disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:opacity-100"

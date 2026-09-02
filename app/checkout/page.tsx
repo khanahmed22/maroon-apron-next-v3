@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button"
 import { useMutation } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { useCart } from "@/zustand/cartStore"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { User, Mail, Phone, MapPin, Store, Truck, ShoppingBag, Tag, X, Loader2, Trash2 } from "lucide-react"
+import { User, Mail, Phone, MapPin, Store, Truck, ShoppingBag, Tag, X, Loader2, Trash2,Ban} from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import {
   Select,
@@ -68,7 +68,10 @@ interface RestListProps {
   preOrderMinHours?: number
   preOrderMaxDays?: number
   pickUpWindows?: string[]
-  deliveryWindows?: string[]
+  deliveryWindows?: string[],
+  orderingDisabled: boolean,
+  pickupEnabled: boolean,
+  deliveryEnabled:boolean
 }
 interface RestResponse {
   getRest: RestListProps
@@ -78,6 +81,50 @@ interface FixRate {
   rate: number,
   fixMode: boolean,
   FixMinOrder: number
+}
+
+// ================= PRE-ORDER TIME WINDOW HELPERS =================
+
+function parseClockTime(raw: string): { hours: number; minutes: number } | null {
+  const trimmed = raw.trim().toLowerCase();
+  const match = trimmed.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/);
+  if (!match) return null;
+
+  let hours = parseInt(match[1], 10);
+  const minutes = match[2] ? parseInt(match[2], 10) : 0;
+  const meridiem = match[3];
+
+  if (meridiem === "pm" && hours !== 12) hours += 12;
+  if (meridiem === "am" && hours === 12) hours = 0;
+
+  if (hours > 23 || minutes > 59) return null;
+  return { hours, minutes };
+}
+
+// "7pm - 9pm" -> Date for the window's START time on the given date
+function getWindowStart(dateStr: string, window: string): Date | null {
+  const startRaw = window.split("-")[0];
+  if (!startRaw) return null;
+
+  const parsed = parseClockTime(startRaw);
+  if (!parsed) return null;
+
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day, parsed.hours, parsed.minutes, 0, 0);
+}
+
+// Is this window still bookable given the minimum-notice requirement?
+function isWindowAvailable(
+  dateStr: string | null,
+  window: string,
+  minHours: number
+): boolean {
+  if (!dateStr) return true; 
+  const windowStart = getWindowStart(dateStr, window);
+  if (!windowStart) return true; 
+
+  const cutoff = new Date(Date.now() + minHours * 60 * 60 * 1000);
+  return windowStart.getTime() >= cutoff.getTime();
 }
 
 
@@ -250,8 +297,7 @@ export default function Checkout(){
 
 
 
-  // Same fix-mode-first logic for minimum order: fixed min order takes
-  // precedence over the area-based minimum when fix mode is enabled.
+ 
   const minimumOrder =
     custDetails.recieveMethod === "delivery"
       ? fixRateM?.fixMode
@@ -267,98 +313,200 @@ export default function Checkout(){
   const deliveryAreaMissing =
     custDetails.recieveMethod === "delivery" && !custDetails.deliveryArea;
 
-    
+  const preOrdersEnabled = restDetails?.getRest?.preOrdersEnabled ?? false;
+  const preOrderMinHours = restDetails?.getRest?.preOrderMinHours ?? 0;
 
-  
+  const availableWindows = (
+    custDetails.recieveMethod === "pickup"
+      ? restDetails?.getRest?.pickUpWindows
+      : restDetails?.getRest?.deliveryWindows
+  )?.filter((window) =>
+    isWindowAvailable(custDetails.scheduledDate, window, preOrderMinHours)
+  ) ?? [];
 
-  
+  const noSlotsForSelectedDate =
+    !!custDetails.scheduledDate && availableWindows.length === 0;
 
+  const preOrderMissing =
+    preOrdersEnabled &&
+    (!custDetails.scheduledDate || !custDetails.scheduledWindow);
 
-  
+  // Reset the picked window if it becomes invalid (date changed, or
+  // time simply passed while the page was left open)
+  useEffect(() => {
+    if (!custDetails.scheduledDate || !custDetails.scheduledWindow) return;
 
+    const stillValid = isWindowAvailable(
+      custDetails.scheduledDate,
+      custDetails.scheduledWindow,
+      preOrderMinHours
+    );
 
-  const placeOrder = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    if (
-      !custDetails.custName ||
-      !custDetails.custEmail ||
-      !custDetails.custPhone ||
-      !custDetails.recieveMethod
-    ) {
-      return toast.error("Fill all fields");
+    if (!stillValid) {
+      setCustDetails((prev) => ({ ...prev, scheduledWindow: "" }));
     }
-    if (custDetails.recieveMethod === "delivery") {
-      if (!custDetails.custAddress) {
-        return toast.error("Address is required for delivery");
-      }
-      if (!custDetails.deliveryArea) {
-        return toast.error("Please select a delivery area");
-      }
-      if (belowMinimumOrder) {
-        return toast.error(
-          fixRateM?.fixMode
-            ? `Minimum order is Rs.${minimumOrder}`
-            : `Minimum order for ${selectedArea?.areaName} is Rs.${minimumOrder}`
-        );
-      }
-      if (custDetails.isPreOrder) {
-  
+  }, [custDetails.scheduledDate, custDetails.scheduledWindow, preOrderMinHours]);
 
-  if (!custDetails.scheduledWindow) {
-    return toast.error("Please select a time window.");
+  const placeOrder = async () => {
+  if (
+    !custDetails.custName ||
+    !custDetails.custEmail ||
+    !custDetails.custPhone ||
+    !custDetails.recieveMethod
+  ) {
+    throw new Error("Fill all fields");
   }
-}
-    }
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/orders`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        custDetails: {
-          ...custDetails,
-          restId: restDetails?.getRest?.id,
-          orderTotal: finalTotal,
-          restName: restDetails?.getRest?.restName,
-          deliveryArea:
-            custDetails.recieveMethod === "delivery"
-              ? selectedArea?.areaName ?? ""
-              : "",
-         
-          deliveryFee:
-            custDetails.recieveMethod === "delivery"
-              ? String(deliveryFee)
-              : "",
-        },
-        cart,
-        
-        coupon: appliedCoupon
-          ? {
-              couponId: appliedCoupon.couponId,
-              code: appliedCoupon.code,
-              discount: appliedCoupon.discount,
-            }
-          : null,
-      }),
-    });
-    clearCart();
-    setAppliedCoupon(null);
-    setCouponCode("");
-    router.push(`/order-placed/${custDetails.orderNumber}`)
-    return res.json();
-  };
 
-  const { mutate: placeOrderM } = useMutation({
-    mutationKey: ["place-order"],
-    mutationFn: placeOrder,
-    onSuccess: () => {
-      toast.success("Order Placed");
-    },
-    onError:()=>{
-      toast.error("Order could not be placed")
+  if (custDetails.recieveMethod === "delivery") {
+    if (!custDetails.custAddress) {
+      throw new Error("Address is required for delivery");
     }
+    if (!custDetails.deliveryArea) {
+      throw new Error("Please select a delivery area");
+    }
+    if (belowMinimumOrder) {
+      throw new Error(
+        fixRateM?.fixMode
+          ? `Minimum order is Rs.${minimumOrder}`
+          : `Minimum order for ${selectedArea?.areaName} is Rs.${minimumOrder}`
+      );
+    }
+  }
+
+  
+  if (preOrdersEnabled) {
+    if (!custDetails.scheduledDate) {
+      throw new Error("Please select a date.");
+    }
+    if (!custDetails.scheduledWindow) {
+      throw new Error("Please select a time window.");
+    }
+    if (
+      !isWindowAvailable(custDetails.scheduledDate, custDetails.scheduledWindow, preOrderMinHours)
+    ) {
+      throw new Error(
+        `That time slot is no longer available. Please pick another slot at least ${preOrderMinHours} hour(s) from now.`
+      );
+    }
+  }
+
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/orders`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      custDetails: {
+        ...custDetails,
+        isPreOrder: preOrdersEnabled, // derived, not user-toggled
+        restId: restDetails?.getRest?.id,
+        orderTotal: finalTotal,
+        restName: restDetails?.getRest?.restName,
+        deliveryArea:
+          custDetails.recieveMethod === "delivery"
+            ? selectedArea?.areaName ?? ""
+            : "",
+        deliveryFee:
+          custDetails.recieveMethod === "delivery"
+            ? String(deliveryFee)
+            : "",
+      },
+      cart,
+      coupon: appliedCoupon
+        ? {
+            couponId: appliedCoupon.couponId,
+            code: appliedCoupon.code,
+            discount: appliedCoupon.discount,
+          }
+        : null,
+    }),
   });
+
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    throw new Error(data?.message || "Could not place order");
+  }
+
+  clearCart();
+  setAppliedCoupon(null);
+  setCouponCode("");
+  router.push(`/order-placed/${custDetails.orderNumber}`);
+
+  return data;
+};
+
+const { mutate: placeOrderM } = useMutation({
+  mutationKey: ["place-order"],
+  mutationFn: placeOrder,
+  onSuccess: () => {
+    toast.success("Order Placed");
+  },
+  onError: (error: Error) => {
+    toast.error(error.message || "Order could not be placed");
+  },
+});
+
+  function handlePlaceOrder (e:React.FormEvent<HTMLFormElement>){
+    e.preventDefault()
+    placeOrderM()
+  }
+
+  const preOrderMaxDays = restDetails?.getRest?.preOrderMaxDays ?? null
+
+  const today = new Date();
+
+const minDate = today.toISOString().split("T")[0];
+
+const maxDate =
+  preOrderMaxDays !== null &&
+  preOrderMaxDays !== undefined 
+  
+    ? (() => {
+        const date = new Date(today);
+        date.setDate(date.getDate() + Number(preOrderMaxDays));
+        return date.toISOString().split("T")[0];
+      })()
+    : undefined;
+
+  if (restDetails?.getRest?.orderingDisabled || false) {
+  const ACCENT = "#D6293F";
+  const INK = "#171717";
+  const MUTE = "#6B7280";
+  const BORDER = "#E7E5E4";
+  const SOFT = "#FBF7F6";
+
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center p-4 sm:p-6"
+      style={{ backgroundColor: SOFT }}
+    >
+      <div
+        className="bg-white rounded-2xl border flex flex-col items-center justify-center gap-3 py-16 px-8 text-center max-w-md w-full"
+        style={{ borderColor: BORDER }}
+      >
+        <div
+          className="w-14 h-14 rounded-full flex items-center justify-center"
+          style={{ backgroundColor: "#FCE8EA" }}
+        >
+          <Ban  className="w-7 h-7" style={{ color: ACCENT }} />
+        </div>
+
+        <h1 className="text-xl font-extrabold" style={{ color: INK }}>
+          We're currently closed
+        </h1>
+
+        <p className="text-sm" style={{ color: MUTE }}>
+          {restDetails?.getRest?.restName
+            ? `${restDetails.getRest.restName} isn't accepting orders right now.`
+            : "This restaurant isn't accepting orders right now."}
+        </p>
+
+        
+      </div>
+    </div>
+  );
+}
 
   return(
     <div className="min-h-screen" style={{ backgroundColor: SOFT }}>
@@ -517,7 +665,7 @@ export default function Checkout(){
               Customer Details
             </h2>
 
-            <form onSubmit={placeOrderM} className="flex flex-col gap-y-4">
+            <form onSubmit={handlePlaceOrder} className="flex flex-col gap-y-4">
               <div className="flex flex-col gap-y-1.5">
                 <label className="text-sm font-medium" style={{ color: INK }}>
                   Name
@@ -595,8 +743,9 @@ export default function Checkout(){
                 <label className="text-sm font-medium" style={{ color: INK }}>
                   Receive Method
                 </label>
+               
                 <div className="grid grid-cols-2 gap-3">
-                  <label
+                  {restDetails?.getRest?.pickupEnabled && <label
                     className="flex items-center gap-2 rounded-xl border p-3 cursor-pointer transition-colors"
                     style={
                       custDetails.recieveMethod === "pickup"
@@ -615,6 +764,8 @@ export default function Checkout(){
                           recieveMethod: e.target.value,
                           deliveryArea: "",
                           custAddress: "",
+                          scheduledDate: null,
+                          scheduledWindow: "",
                         })
                       }
                       className="sr-only"
@@ -629,9 +780,9 @@ export default function Checkout(){
                     >
                       Pickup
                     </span>
-                  </label>
-
-                  <label
+                  </label>}
+                  
+                  {restDetails?.getRest?.deliveryEnabled && <label
                     className="flex items-center gap-2 rounded-xl border p-3 cursor-pointer transition-colors"
                     style={
                       custDetails.recieveMethod === "delivery"
@@ -648,6 +799,8 @@ export default function Checkout(){
                         setCustDetails({
                           ...custDetails,
                           recieveMethod: e.target.value,
+                          scheduledDate: null,
+                          scheduledWindow: "",
                         })
                       }
                       className="sr-only"
@@ -662,7 +815,8 @@ export default function Checkout(){
                     >
                       Delivery
                     </span>
-                  </label>
+                  </label>}
+                  
                 </div>
               </div>
 
@@ -729,77 +883,69 @@ export default function Checkout(){
                 </div>
               )}
 
-              {restDetails?.getRest?.preOrdersEnabled &&
-  (custDetails.recieveMethod === "pickup" ||
-    custDetails.recieveMethod === "delivery") && (
+              {preOrdersEnabled &&
+                (custDetails.recieveMethod === "pickup" ||
+                  custDetails.recieveMethod === "delivery") && (
     <div className="space-y-4 rounded-xl border p-4" style={{ borderColor: BORDER }}>
-      <label className="flex items-center gap-2 text-sm font-medium">
-        <input
-          type="checkbox"
-          checked={custDetails.isPreOrder}
-          onChange={(e) =>
+      <p className="text-sm font-semibold" style={{ color: INK }}>
+        Schedule your Order
+      </p>
+
+      <Input
+        type="date"
+        min={minDate}
+        max={maxDate}
+        required
+        value={custDetails.scheduledDate ?? ""}
+        onChange={(e) =>
+          setCustDetails({
+            ...custDetails,
+            scheduledDate: e.target.value,
+            scheduledWindow: "", // reset window when date changes
+          })
+        }
+      />
+
+      {noSlotsForSelectedDate ? (
+        <p className="text-sm font-medium" style={{ color: ACCENT }}>
+          We can't {custDetails.recieveMethod === "pickup" ? "prepare pickup" : "deliver"} for
+          this date anymore - all time slots have passed. Please choose a later date.
+        </p>
+      ) : (
+        <Select
+          value={custDetails.scheduledWindow}
+          onValueChange={(value) =>
             setCustDetails({
               ...custDetails,
-              isPreOrder: e.target.checked,
-              scheduledDate: null,
-              scheduledWindow: "",
+              scheduledWindow: value,
             })
           }
-        />
-        Schedule your Order
-      </label>
+        >
+          <SelectTrigger>
+            <SelectValue
+              placeholder={
+                custDetails.recieveMethod === "pickup"
+                  ? "Select Pickup Window"
+                  : "Select Delivery Window"
+              }
+            />
+          </SelectTrigger>
 
-      {custDetails.isPreOrder && (
-        <>
-          <Input
-            type="date"
-            value={custDetails.scheduledDate ?? ""}
-            onChange={(e) =>
-              setCustDetails({
-                ...custDetails,
-                scheduledDate: e.target.value,
-              })
-            }
-          />
-
-          <Select
-            value={custDetails.scheduledWindow}
-            onValueChange={(value) =>
-              setCustDetails({
-                ...custDetails,
-                scheduledWindow: value,
-              })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue
-                placeholder={
-                  custDetails.recieveMethod === "pickup"
-                    ? "Select Pickup Window"
-                    : "Select Delivery Window"
-                }
-              />
-            </SelectTrigger>
-
-            <SelectContent>
-              {(custDetails.recieveMethod === "pickup"
-                ? restDetails?.getRest?.pickUpWindows
-                : restDetails?.getRest?.deliveryWindows
-              )?.map((window) => (
-                <SelectItem key={window} value={window}>
-                  {window}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </>
+          <SelectContent>
+            {availableWindows.map((window) => (
+              <SelectItem key={window} value={window}>
+                {window}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       )}
     </div>
   )}
 
               <Button
                 type="submit"
-                disabled={deliveryAreaMissing || belowMinimumOrder}
+                disabled={deliveryAreaMissing || belowMinimumOrder || preOrderMissing}
                 className="text-white rounded-full py-2.5 mt-2 font-semibold hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
                 style={{ backgroundColor: ACCENT }}
               >

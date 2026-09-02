@@ -30,10 +30,11 @@ interface CartItem {
 interface CartProps {
   cartOpen: boolean
   setCartOpen: Dispatch<SetStateAction<boolean>>
-  activeThemeName:string
+  activeThemeName:string,
+  orderingDisabled:boolean | undefined
 }
 
-export default function Cart({ cartOpen, setCartOpen ,activeThemeName}: CartProps) {
+export default function Cart({ cartOpen, setCartOpen ,activeThemeName,orderingDisabled}: CartProps) {
   const { cart, clearCart, deleteCart } = useCart()
   const router = useRouter()
   const ACCENT = "#D6293F"
@@ -109,6 +110,7 @@ const SOFT = "#FBF7F6"
                 Clear Cart
               </Button>
               <Button
+                disabled={orderingDisabled}
                 className="mt-auto pt-3 w-fit text-sm font-semibold rounded-full py-2 px-4 transition-colors
                                  bg-primary text-primary-foreground
                                  disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:opacity-100"
