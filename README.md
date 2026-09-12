@@ -1,6 +1,6 @@
 Important Note: Interconnected with Crimson Admin. Visit: https://github.com/khanahmed22/crimson-admin-v3
 
-# Crimson Castle Client App
+# Maroon Apron Client App
 
 A modern storefront platform built for home chefs.  
 The client-facing store is built with **Next.js** for improved SEO, faster page loads, and better discoverability on search engines.
@@ -63,7 +63,7 @@ https://www.youtube.com/watch?v=gFH15YnGEZ8&t=6s
 - Neon Postgres
 - Firebase Cloud Messaging (Push Notifications)
 
-Backend Repository: [Crimson Castle Backend](https://github.com/khanahmed22/crimson-backend-v3)
+Backend Repository: [Maroon Apron Backend](https://github.com/khanahmed22/crimson-backend-v3)
 
 
 ---
@@ -82,6 +82,6 @@ The storefront is built with **Next.js** to improve:
 
 # Vision
 
-Crimson Castle helps home chefs build independent digital food businesses without relying entirely on Instagram, Facebook, or WhatsApp for orders.
+Maroon Apron helps home chefs build independent digital food businesses without relying entirely on Instagram, Facebook, or WhatsApp for orders.
 
 The platform provides a modern online storefront experience while giving home chefs full ownership of their brand, customers, and revenue.

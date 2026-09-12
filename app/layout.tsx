@@ -78,7 +78,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   if (!restaurant) {
     return {
-      title: "Crimson Castle",
+      title: "Maroon Apron",
       description: "Order online",
     };
   }

@@ -562,7 +562,7 @@ export default function Home() {
         </div>
         {
          restDetails?.getRest?.crimsonBranding && <div className="flex items-center justify-center text-sm mt-3 bg-red-500 text-white p-3 w-full">
-          <h1>Powered by <a href="http://crimsoncastle.biz" target="_blank" className="hover:underline">Crimson Castle</a></h1>
+          <h1>Powered by <a href="http://maroonapron.com" target="_blank" className="hover:underline">Maroon Apron</a></h1>
         </div>
         }
         
