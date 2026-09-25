@@ -285,6 +285,29 @@ export default function Checkout(){
    enabled:!!restId,
    staleTime: 5 * 60 * 1000, //5min
   })
+
+  const KARACHI_AREAS = [
+  "Clifton",
+  "Defence (DHA)",
+  "Gulshan-e-Iqbal",
+  "North Nazimabad",
+  "PECHS",
+  "Gulistan-e-Johar",
+  "Malir",
+  "Korangi",
+  "Saddar",
+  "Nazimabad",
+  "Federal B Area",
+  "Bahadurabad",
+  "Tariq Road",
+  "Shahra-e-Faisal",
+  "Gulberg",
+  "Landhi",
+  "Orangi Town",
+  "Lyari",
+  "Surjani Town",
+  "Scheme 33",
+];
   const deliveryFee =
     custDetails.recieveMethod === "delivery"
       ? fixRateM?.fixMode
@@ -306,9 +329,9 @@ export default function Checkout(){
       : 0;
 
   const belowMinimumOrder =
-    custDetails.recieveMethod === "delivery" &&
-    !!selectedArea &&
-    subtotal < minimumOrder;
+  custDetails.recieveMethod === "delivery" &&
+  (fixRateM?.fixMode || !!selectedArea) &&
+  subtotal < minimumOrder;
 
   const deliveryAreaMissing =
     custDetails.recieveMethod === "delivery" && !custDetails.deliveryArea;
@@ -341,6 +364,14 @@ export default function Checkout(){
       custDetails.scheduledWindow,
       preOrderMinHours
     );
+
+    useEffect(() => {
+  if (custDetails.recieveMethod !== "delivery") return;
+  if (!custDetails.deliveryArea) return;
+
+  setCustDetails((prev) => ({ ...prev, deliveryArea: "" }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [fixRateM?.fixMode]);
 
     if (!stillValid) {
       setCustDetails((prev) => ({ ...prev, scheduledWindow: "" }));
@@ -404,7 +435,9 @@ export default function Checkout(){
         restName: restDetails?.getRest?.restName,
         deliveryArea:
           custDetails.recieveMethod === "delivery"
-            ? selectedArea?.areaName ?? ""
+            ? fixRateM?.fixMode
+              ? custDetails.deliveryArea
+              : selectedArea?.areaName ?? ""
             : "",
         deliveryFee:
           custDetails.recieveMethod === "delivery"
@@ -621,7 +654,8 @@ const maxDate =
               <span>Rs. {subtotal || 0}</span>
             </div>
 
-            {custDetails.recieveMethod === "delivery" && selectedArea && (
+            {custDetails.recieveMethod === "delivery" &&
+  (fixRateM?.fixMode || selectedArea) && (
               <div
                 className="flex items-center justify-between mt-2 text-sm font-medium"
                 style={{ color: INK }}
@@ -650,10 +684,12 @@ const maxDate =
             </div>
 
             {belowMinimumOrder && (
-              <p className="mt-3 text-sm font-medium" style={{ color: ACCENT }}>
-                Minimum order for {selectedArea?.areaName} is Rs.{minimumOrder}
-              </p>
-            )}
+  <p className="mt-3 text-sm font-medium" style={{ color: ACCENT }}>
+    {fixRateM?.fixMode
+      ? `Minimum order is Rs.${minimumOrder}`
+      : `Minimum order for ${selectedArea?.areaName} is Rs.${minimumOrder}`}
+  </p>
+)}
           </div>
 
           {/* ================= CUSTOMER DETAILS ================= */}
@@ -847,7 +883,7 @@ const maxDate =
                       />
                     </div>
                   </div>
-                  <div className="flex flex-col gap-y-1.5">
+                                    <div className="flex flex-col gap-y-1.5">
                     <label
                       className="text-sm font-semibold"
                       style={{ color: INK }}
@@ -855,30 +891,54 @@ const maxDate =
                       Delivery Area
                     </label>
 
-                    <Select
-                      value={custDetails.deliveryArea}
-                      onValueChange={(value) =>
-                        setCustDetails({
-                          ...custDetails,
-                          deliveryArea: value,
-                        })
-                      }
-                    >
-                      <SelectTrigger className="w-full h-11 rounded-xl">
-                        <SelectValue placeholder="Select your delivery area" />
-                      </SelectTrigger>
+                    {fixRateM?.fixMode ? (
+                      <Select
+                        value={custDetails.deliveryArea}
+                        onValueChange={(value) =>
+                          setCustDetails({
+                            ...custDetails,
+                            deliveryArea: value,
+                          })
+                        }
+                      >
+                        <SelectTrigger className="w-full h-11 rounded-xl">
+                          <SelectValue placeholder="Select your area" />
+                        </SelectTrigger>
 
-                      <SelectContent>
-                        {deliveryList?.map((area) => (
-                          <SelectItem
-                            key={area.areaId}
-                            value={area.areaId}
-                          >
-                            {area.areaName} ({area.cityName}) 
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        <SelectContent>
+                          {KARACHI_AREAS.map((area) => (
+                            <SelectItem key={area} value={area}>
+                              {area}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Select
+                        value={custDetails.deliveryArea}
+                        onValueChange={(value) =>
+                          setCustDetails({
+                            ...custDetails,
+                            deliveryArea: value,
+                          })
+                        }
+                      >
+                        <SelectTrigger className="w-full h-11 rounded-xl">
+                          <SelectValue placeholder="Select your delivery area" />
+                        </SelectTrigger>
+
+                        <SelectContent>
+                          {deliveryList?.map((area) => (
+                            <SelectItem
+                              key={area.areaId}
+                              value={area.areaId}
+                            >
+                              {area.areaName} ({area.cityName})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                 </div>
               )}

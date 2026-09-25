@@ -11,6 +11,7 @@ import {
   MapPin,
   Receipt,
   Store,
+  Banknote,
 } from 'lucide-react'
 import Link from 'next/link'
 import dynamic from "next/dynamic";
@@ -47,6 +48,7 @@ interface OrderProps {
   isPreOrder:boolean,
   scheduledDate: string,
   scheduledWindow: string,
+  paymentMethod:string
 }
 
 interface RestListProps {
@@ -366,6 +368,16 @@ const statusStyles = getStatusStyles(orderQuery?.status)
                 </span>
               </div>
             )}
+
+             <div className="flex items-center gap-3">
+              <Banknote
+                className="w-4 h-4 shrink-0"
+                style={{ color: ACCENT }}
+              />
+              <span style={{ color: INK }}>
+                {orderQuery.paymentMethod}
+              </span>
+            </div>
 
             <div className="flex items-center gap-4">
   <div className="flex items-center gap-2">
