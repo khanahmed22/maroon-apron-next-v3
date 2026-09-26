@@ -25,7 +25,7 @@ const SOFT = "#FBF7F6"
 
   try {
     const res = await fetch(
-      "/api/auth/login",
+      "/api/auth/login-customer",
       {
         method: "POST",
         credentials: "include",

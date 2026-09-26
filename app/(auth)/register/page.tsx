@@ -36,7 +36,7 @@ const SOFT = "#FBF7F6"
   }
 
   try {
-    const res = await fetch("/api/auth/register", {
+    const res = await fetch("/api/auth/register-customer", {
       method: "POST",
       credentials: "include",
       headers: {
