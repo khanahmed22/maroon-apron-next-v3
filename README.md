@@ -1,4 +1,4 @@
-Important Note: Interconnected with Crimson Admin. Visit: https://github.com/khanahmed22/crimson-admin-v3
+Important Note: Interconnected with Maroon Apron Admin. Visit: https://github.com/khanahmed22/maroon-apron-admin-v3
 
 # Maroon Apron Client App
 
@@ -18,13 +18,13 @@ https://pizzatown.crimsoncastle.shop
 
 ## Demo Video
 
-https://www.youtube.com/watch?v=gFH15YnGEZ8&t=6s
+https://www.youtube.com/watch?v=quDtYABFbi4
 
 ---
 
 # Storefront Preview
 
-![Online Store](https://res.cloudinary.com/dgmfm08s8/image/upload/v1785400663/Storefront_kwawka.png)
+![Online Store](https://res.cloudinary.com/dgmfm08s8/image/upload/v1795533165/Storefront_q6codo.png)
 
 ---
 
@@ -60,7 +60,7 @@ https://www.youtube.com/watch?v=gFH15YnGEZ8&t=6s
 - Express.js
 - Node.js
 - Prisma ORM
-- Neon Postgres
+- Postgres
 - Firebase Cloud Messaging (Push Notifications)
 
 Backend Repository: [Maroon Apron Backend](https://github.com/khanahmed22/crimson-backend-v3)
