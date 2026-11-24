@@ -63,7 +63,7 @@ https://www.youtube.com/watch?v=quDtYABFbi4
 - Postgres
 - Firebase Cloud Messaging (Push Notifications)
 
-Backend Repository: [Maroon Apron Backend](https://github.com/khanahmed22/crimson-backend-v3)
+Backend Repository: [Maroon Apron Backend](https://github.com/khanahmed22/maroon-apron-backend-v3)
 
 
 ---
